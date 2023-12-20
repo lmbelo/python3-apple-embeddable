@@ -21,7 +21,7 @@ jobs:
       OPENSSL_VERSION: ${{ steps.version-details.outputs.OPENSSL_VERSION }}
     strategy:
       matrix:
-        target: ['macOS', 'iOS', 'tvOS', 'watchOS']
+        target: ['macOS', 'iOS']
     steps:
     - uses: actions/checkout@v4
 
