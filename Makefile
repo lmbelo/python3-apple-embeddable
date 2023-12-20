@@ -311,8 +311,13 @@ $$(PYTHON_LIB-$(target)): $$(PYTHON_SRCDIR-$(target))/python.exe
 			make install \
 			2>&1 | tee -a ../python-$(PYTHON_VERSION).install.log
 
-endif
+	@echo ">>> Make shared library for $(target)"
+	$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/bin/$$(TARGET_TRIPLE-$(target))-clang "-shared -all_load -o $$(PYTHON_INSTALL-$(target))/lib/libpython$(PYTHON_VER).dylib $$@"
 
+	@echo ">>> Bundling Python for $(target)"
+	mkdir -p dist
+	cd $$(PYTHON_INSTALL-$(target)) && zip -r $(PROJECT_DIR)/dist/python3-ios-$(PYTHON_VERSION)-$(target).zip *
+endif
 PYTHON_SITECUSTOMIZE-$(target)=$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/platform-site/$(target)/sitecustomize.py
 
 $$(PYTHON_SITECUSTOMIZE-$(target)):
@@ -536,7 +541,13 @@ $$(PYTHON_LIB-$(sdk)) $$(PYTHON_INCLUDE-$$(sdk))/Python.h $$(PYTHON_STDLIB-$(sdk
 	cd $$(PYTHON_SRCDIR-$(sdk)) && \
 		make install \
 		2>&1 | tee -a ../python-$(PYTHON_VERSION).install.log
+	
+	@echo ">>> Make shared library for $(sdk)"
+	$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/bin/$$(TARGET_TRIPLE-$(sdk))-clang "-shared -all_load -o $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib $$@"
 
+	@echo ">>> Bundling Python for $(sdk)"
+	mkdir -p dist
+	cd $$(PYTHON_INSTALL-$(sdk)) && zip -r $(PROJECT_DIR)/dist/python3-macos-$(PYTHON_VERSION)-universal2.zip *
 else
 
 # Non-macOS builds need to be merged on a per-SDK basis. The merge covers:
