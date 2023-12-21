@@ -539,7 +539,19 @@ $$(PYTHON_LIB-$(sdk)) $$(PYTHON_INCLUDE-$$(sdk))/Python.h $$(PYTHON_STDLIB-$(sdk
 		2>&1 | tee -a ../python-$(PYTHON_VERSION).install.log
 	
 	@echo ">>> Make shared library for $(sdk)"
-	$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/bin/$$(TARGET_TRIPLE-$(sdk))-clang "-shared -all_load -o $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib $$@"
+	lipo $$(PYTHON_LIB-$(sdk)) -extract x86_64 -output $$@.x86_64
+	lipo $$(PYTHON_LIB-$(sdk)) -extract arm64 -output $$@.arm64
+
+	$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/bin/$$(TARGET_TRIPLE-$(sdk))-clang "-shared -all_load -arch x86_64 -o $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.x86_64 $$@.x86_64"
+	$(PROJECT_DIR)/support/$(PYTHON_VER)/$(os)/bin/$$(TARGET_TRIPLE-$(sdk))-clang "-shared -all_load -arch arm64 -o $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.arm64 $$@.arm64"
+
+	lipo -create $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.x86_64 $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.arm64 -output $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib
+
+	rm $$@.x86_64
+	rm $$@.arm64
+
+	rm $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.x86_64
+	rm $$(PYTHON_INSTALL-$(sdk))/lib/libpython$(PYTHON_VER).dylib.arm64
 
 	@echo ">>> Bundling Python for $(sdk)"
 	mkdir -p dist
