@@ -130,11 +130,9 @@ ifneq ($(os),macOS)
 	ifeq ($$(findstring simulator,$$(SDK-$(target))),)
 TARGET_TRIPLE-$(target)=$$(ARCH-$(target))-apple-$$(OS_LOWER-$(target))$$(VERSION_MIN-$(os))
 IS_SIMULATOR-$(target)="False"
-CLANG-$(target)=$$(ARCH-$(target))-apple-$$(OS_LOWER-$(target))-clang
 	else
 TARGET_TRIPLE-$(target)=$$(ARCH-$(target))-apple-$$(OS_LOWER-$(target))$$(VERSION_MIN-$(os))-simulator
 IS_SIMULATOR-$(target)="True"
-CLANG-$(target)=$$(ARCH-$(target))-apple-$$(OS_LOWER-$(target))-simulator-clang
 	endif
 endif
 
@@ -340,13 +338,13 @@ $$(PYTHON_SITECUSTOMIZE-$(target)):
 
 	@echo ">>> Make shared library for $(target)"
 	@if [ "$(os)" != "macOS" ]; then \
-		$$(PYTHON_SRCDIR-$(target))/$(os)/Resources/bin/$$(CLANG-$(target)) "-shared -all_load -o $$(PYTHON_INSTALL-$(target))/lib/libpython$(PYTHON_VER).dylib $$(PYTHON_LIB-$(target))" \
+		cp $$(PYTHON_INSTALL-$(target))/Python.framework/Python $$(PYTHON_INSTALL-$(target))/lib/libpython$(PYTHON_VER).dylib \
 		&& mkdir -p $(PROJECT_DIR)/dist \
 		&& cd $$(PYTHON_INSTALL-$(target)) \
 		&& rm -R ./Python.framework \
 		&& zip -r $(PROJECT_DIR)/dist/python3-ios-$(PYTHON_VERSION)-$(target).zip *; \
 	else \
-		clang -shared -all_load -arch $$(ARCH-$(target)) -o $$(PYTHON_INSTALL-$(target))/Python.framework/Versions/$(PYTHON_VER)/lib/libpython$(PYTHON_VER).$$(ARCH-$(target)).dylib $$(PYTHON_LIB-$(target)); \
+		cp $$(PYTHON_LIB-$(target)) $$(PYTHON_INSTALL-$(target))/Python.framework/Versions/$(PYTHON_VER)/lib/libpython$(PYTHON_VER).dylib; \
 	fi
 
 
@@ -601,15 +599,6 @@ dist/Python-$(PYTHON_VER)-macOS-support.$(BUILD_NUMBER).tar.gz: \
 	xattr -cr support/$(PYTHON_VER)/macOS
 	# Build a distributable tarball
 	tar zcvf $$@ -C support/$(PYTHON_VER)/macOS `ls -A support/$(PYTHON_VER)/macOS/`
-
-	lipo -create \
-		$$(PYTHON_INSTALL_UNIVERSAL)/lib/libpython$(PYTHON_VER).x86_64.dylib \
-		$$(PYTHON_INSTALL_UNIVERSAL)/lib/libpython$(PYTHON_VER).arm64.dylib \
-		-output \
-		$$(PYTHON_INSTALL_UNIVERSAL)/lib/libpython$(PYTHON_VER).dylib
-
-	rm $$(PYTHON_INSTALL_UNIVERSAL)/lib/libpython$(PYTHON_VER).x86_64.dylib
-	rm $$(PYTHON_INSTALL_UNIVERSAL)/lib/libpython$(PYTHON_VER).arm64.dylib
 
 	rm -R $$(PYTHON_INSTALL_UNIVERSAL)/Headers
 	rm -R $$(PYTHON_INSTALL_UNIVERSAL)/_CodeSignature
